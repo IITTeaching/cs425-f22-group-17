@@ -3,7 +3,7 @@ drop table if exists Customer cascade;
 drop table if exists Employee cascade;
 drop table if exists Account cascade;
 drop table if exists Owners cascade;
-drop table if exists transaction cascade;
+drop table if exists Transaction cascade;
 
 drop role if exists customer;
 
@@ -78,3 +78,35 @@ create table Transaction
     foreign key (acct_num) references Account on delete cascade,
     check (type='withdrawal' or type='deposit' or type='transfer' or type='external transfer')
 );
+
+create or replace function add_user()
+	returns trigger as
+$$
+begin 
+	execute format('create user %I with password ''%I''', new.username, new.pass);
+	return new;
+end;
+$$
+language 'plpgsql';
+
+create or replace trigger new_customer_trigger
+	after insert
+	on Customer
+	for each row 
+	execute procedure add_user();
+
+create or replace function remove_user()
+    returns trigger as
+$$
+begin
+    execute format('drop user if exists %I', old.username);
+    return new;
+end;
+$$
+language 'plpgsql';
+
+create or replace trigger delete_customer_trigger
+    after delete
+    on Customer
+    for each row
+    execute procedure remove_user();
