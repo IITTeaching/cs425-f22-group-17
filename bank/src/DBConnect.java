@@ -5,9 +5,18 @@ import java.sql.SQLException;
 public class DBConnect 
 {
     static final String DB_URL = "jdbc:postgresql://group17database.net:5432/postgres";
-    
-    public Connection connect(String username, String password) throws SQLException
+
+    private String username;
+    private String password;
+
+    public DBConnect(String username, String password)
     {
-        return DriverManager.getConnection(DB_URL, username, password);
+        this.username = username;
+        this.password = password;
+    }
+    
+    public Connection connect() throws SQLException
+    {
+        return DriverManager.getConnection(DB_URL, this.username, this.password);
     }
 }
