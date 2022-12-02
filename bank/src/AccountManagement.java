@@ -1,4 +1,3 @@
-package test.java;
 
 import javax.swing.table.*;
 
