@@ -1,5 +1,8 @@
 package test.java;
 
+import java.sql.SQLException;
+import java.sql.Statement;
+
 /**
  *
  * @author fmeraz
@@ -16,7 +19,7 @@ public class AccountTransactions extends javax.swing.JFrame {
                            
     private void initComponents() {
 
-        Withdraw = new javax.swing.JLabel();
+        Withdraw = new javax.swing.JLabel(); //Creates all the variables in the GUI
         AccountTransactionsMain = new javax.swing.JLabel();
         EnterAmount1 = new javax.swing.JLabel();
         WithdrawEnterAmount = new javax.swing.JTextField();
@@ -53,54 +56,183 @@ public class AccountTransactions extends javax.swing.JFrame {
         jSeparator2 = new javax.swing.JSeparator();
         jSeparator3 = new javax.swing.JSeparator();
 
-        setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
+        setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
 
         Withdraw.setText("Withdrawl");
 
-        AccountTransactionsMain.setFont(new java.awt.Font("Helvetica Neue", 1, 24)); // NOI18N
-        AccountTransactionsMain.setText("Account Transactions");
+        AccountTransactionsMain.setFont(new java.awt.Font("Helvetica Neue", 1, 24)); //sets the font, style, and size of the text
+        AccountTransactionsMain.setText("Account Transactions");//sets text
 
-        EnterAmount1.setText("Enter Amount:");
+        EnterAmount1.setText("Enter Amount:");//sets text
 
-        WithdrawAccountName.setText("Enter Account Name:");
+        WithdrawAccountName.setText("Enter Account Name:");//sets text
 
-        DepositAccountName.setText("Enter Account Name:");
+        DepositAccountName.setText("Enter Account Name:");//sets text
 
-        Deposit.setText("Deposit");
+        Deposit.setText("Deposit");//sets text
 
-        EnterAmount2.setText("Enter Amount:");
+        EnterAmount2.setText("Enter Amount:");//sets text
 
-        TranferFromAccount.setText("From (Account Name):");
+        TranferFromAccount.setText("From (Account Name):");//sets text
 
-        Tranfer.setText("Transfer");
+        Tranfer.setText("Transfer");//sets text
 
-        EnterAmount3.setText("Enter Amount:");
+        EnterAmount3.setText("Enter Amount:");//sets text
 
-        ExTransferFromAccount.setText("From (Account Name):");
+        ExTransferFromAccount.setText("From (Account Name):");//sets text
 
-        ExTransfer.setText("External Transfer");
+        ExTransfer.setText("External Transfer");//sets text
 
-        EnterAmount4.setText("Enter Amount:");
+        EnterAmount4.setText("Enter Amount:");//sets text
 
-        WithdrawToAccount.setText("To (Account Name):");
+        WithdrawToAccount.setText("To (Account Name):");//sets text
 
-        ExTransferToAccount.setText("To (Account Name):");
+        ExTransferToAccount.setText("To (Account Name):");//sets text
 
-        MoneySign4.setText("$");
+        MoneySign4.setText("$");//sets text
 
-        MoneySign1.setText("$");
+        MoneySign1.setText("$");//sets text
 
-        MoneySign2.setText("$");
+        MoneySign2.setText("$");//sets text
 
-        MoneySign3.setText("$");
+        MoneySign3.setText("$");//sets text
 
-        ExTransferButton.setText("Ex. Transfer");
+        ExTransferButton.setText("Ex. Transfer");//sets text of button
 
-        WithdrawButton.setText("Withdraw");
+        ExTransferButton.addActionListener(new java.awt.event.ActionListener() {//sets the action that occurs when button is pressed
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                DBConnect database = new DBConnect(Login.username, Login.password);
+                try
+                {
+                    Statement stmt = database.connect().createStatement();
+                    double amount = Double.parseDouble(ExTransferEnterAmount.getText());
+                    String sql = String.format("INSERT INTO Transactions(acct_num, type, amount) VALUES (%s, 'withdrawal', %.2f)", ExTransferEnterFromAccount.getText(), amount);
+                    stmt.executeQuery(sql);
+                    database.connect().close();
+                }
+                catch(SQLException e)
+                {
+                    System.out.println(e.getMessage());
+                }
+                finally
+                {
+                    if(Login.role.equals("manager"))
+                    {
+                        new ManagerAccountManagement().setVisible(true);
+                    }
+                    else
+                    {
+                        new AccountManagement().setVisible(true);
+                    }
+                    dispose();
+                }
+            }
+        });
 
-        TransferButton.setText("Transfer");
+        WithdrawButton.setText("Withdraw");//sets text of button
+        
+        WithdrawButton.addActionListener(new java.awt.event.ActionListener() {//sets the action that occurs when button is pressed
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                DBConnect database = new DBConnect(Login.username, Login.password);
+                try
+                {
+                    Statement stmt = database.connect().createStatement();
+                    double amount = Double.parseDouble(WithdrawEnterAmount.getText());
+                    String sql = String.format("INSERT INTO Transactions(acct_num, type, amount) VALUES (%s, 'withdrawal', %.2f)", WithdrawEnterAccountName.getText(), amount);
+
+                    stmt.executeQuery(sql);
+                    database.connect().close();
+                }
+                catch(SQLException e)
+                {
+                    System.out.println(e.getMessage());
+                }
+                finally
+                {
+                    //new AccountManagement().setVisible(true);
+                    if(Login.role.equals("manager"))
+                    {
+                        new ManagerAccountManagement().setVisible(true);
+                    }
+                    else
+                    {
+                        new AccountManagement().setVisible(true);
+                    }
+                    dispose();
+                }
+            }
+        });
+
+        TransferButton.setText("Transfer");//sets button text
+
+        TransferButton.addActionListener(new java.awt.event.ActionListener() {//sets the action that occurs when button is pressed
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                System.out.println(ExTransferEnterToAccount.getText());
+                DBConnect user = new DBConnect(Login.username, Login.password);
+                DBConnect admin = new DBConnect("postgres", "bball0128");
+                try
+                {
+                    
+                    Statement stmt = user.connect().createStatement();
+                    double amount = Double.parseDouble(TransferEnterAmount.getText());
+                    String sql = String.format("INSERT INTO Transactions(acct_num, type, amount) VALUES (%s, 'withdrawal', %.2f)", TranferEnterFromAccount.getText(), amount);
+                    stmt.executeQuery(sql);
+                    user.connect().close();
+                    Statement stmt2 = admin.connect().createStatement();
+                    String sql2 = String.format("INSERT INTO Transactions(acct_num, type, amount) VALUES (%s, 'deposit', %.2f)", WithdrawEnterToAccount.getText(), amount);
+                    stmt2.executeQuery(sql2);
+                    admin.connect().close();
+                }
+                catch(SQLException e)
+                {
+                    System.out.println(e.getMessage());
+                }
+                finally
+                {
+                    if(Login.role.equals("manager"))
+                    {
+                        new ManagerAccountManagement().setVisible(true);
+                    }
+                    else
+                    {
+                        new AccountManagement().setVisible(true);
+                    }
+                    dispose();
+                }
+            }
+        });
 
         DepositButton.setText("Deposit");
+        
+        DepositButton.addActionListener(new java.awt.event.ActionListener() {//sets the action that occurs when button is pressed
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                DBConnect database = new DBConnect(Login.username, Login.password);
+                try
+                {
+                    Statement stmt = database.connect().createStatement();
+                    double amount = Double.parseDouble(DepositEnterAmount.getText());
+                    String sql = String.format("INSERT INTO Transactions(acct_num, type, amount) VALUES (%s, 'deposit', %.2f)", DepositEnterAccountName.getText(), amount);
+                    stmt.executeQuery(sql);
+                    database.connect().close();
+                }
+                catch(SQLException e)
+                {
+                    System.out.println(e.getMessage());
+                }
+                finally
+                {
+                    if(Login.role.equals("manager"))
+                    {
+                        new ManagerAccountManagement().setVisible(true);
+                    }
+                    else
+                    {
+                        new AccountManagement().setVisible(true);
+                    }
+                    dispose();
+                }
+            }
+        });
 
         jSeparator1.setOrientation(javax.swing.SwingConstants.VERTICAL);
 
@@ -108,7 +240,7 @@ public class AccountTransactions extends javax.swing.JFrame {
 
         jSeparator3.setOrientation(javax.swing.SwingConstants.VERTICAL);
 
-        javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
+        javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane()); //all this sets the layout of the alignment of GUI elements
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -282,29 +414,12 @@ public class AccountTransactions extends javax.swing.JFrame {
         );
 
         pack();
-    }                     
-
+    }    
+    
     /**
      * @param args the command line arguments
      */
     public static void main(String args[]) {
-        
-        try {
-            for (javax.swing.UIManager.LookAndFeelInfo info : javax.swing.UIManager.getInstalledLookAndFeels()) {
-                if ("Nimbus".equals(info.getName())) {
-                    javax.swing.UIManager.setLookAndFeel(info.getClassName());
-                    break;
-                }
-            }
-        } catch (ClassNotFoundException ex) {
-            java.util.logging.Logger.getLogger(AccountTransactions.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        } catch (InstantiationException ex) {
-            java.util.logging.Logger.getLogger(AccountTransactions.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        } catch (IllegalAccessException ex) {
-            java.util.logging.Logger.getLogger(AccountTransactions.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        } catch (javax.swing.UnsupportedLookAndFeelException ex) {
-            java.util.logging.Logger.getLogger(AccountTransactions.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        }
         
         java.awt.EventQueue.invokeLater(new Runnable() {
             public void run() {
@@ -312,9 +427,8 @@ public class AccountTransactions extends javax.swing.JFrame {
             }
         });
     }
-
-    // Variables declaration - do not modify                     
-    private javax.swing.JLabel AccountTransactionsMain;
+               
+    private javax.swing.JLabel AccountTransactionsMain; // This is where the variables are declared
     private javax.swing.JLabel Deposit;
     private javax.swing.JLabel DepositAccountName;
     private javax.swing.JButton DepositButton;
@@ -349,6 +463,5 @@ public class AccountTransactions extends javax.swing.JFrame {
     private javax.swing.JLabel WithdrawToAccount;
     private javax.swing.JSeparator jSeparator1;
     private javax.swing.JSeparator jSeparator2;
-    private javax.swing.JSeparator jSeparator3;
-    // End of variables declaration                   
+    private javax.swing.JSeparator jSeparator3;                
 }

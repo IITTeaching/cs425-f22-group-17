@@ -48,7 +48,7 @@ BEGIN
                                      END
             where acct_num = new.acct_num;
         update Transactions set balance_after = (select balance from Account where acct_num = new.acct_num) 
-            where id = (select last_value from transactions_id_seq);
+            where id = new.id;
     end if;
     return new;
 END;

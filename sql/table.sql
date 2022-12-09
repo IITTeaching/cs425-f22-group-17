@@ -1,12 +1,4 @@
-drop table if exists Branch cascade;
-drop table if exists Customer cascade;
-drop table if exists Employee cascade;
-drop table if exists Account cascade;
-drop table if exists Owners cascade;
-drop table if exists Transaction cascade;
-
-drop role if exists customer;
-
+-- Active: 1670181037590@@group17database.net@5432@postgres
 create table Branch
 (
     addr_num int,
@@ -19,6 +11,8 @@ create table Branch
 
 create table Customer
 (
+    username varchar(20),
+    pass varchar,
     first_name varchar,
     last_name varchar,
     addr_num int,
@@ -31,12 +25,14 @@ create table Customer
     b_city varchar,
     b_state varchar,
     b_zip char(5),
-    primary key(first_name, last_name),
+    primary key(username),
     foreign key(b_addr_num, b_street, b_city, b_state, b_zip) references Branch on delete cascade
 );
 
 create table Employee
 (
+    username varchar(20),
+    pass varchar,
     first_name varchar,
     last_name varchar,
     ssn NUMERIC(9),
@@ -55,58 +51,36 @@ create table Employee
 create table Account
 (
     acct_num numeric(12),
-    primary key (acct_num)
+    balance numeric(10,2) DEFAULT 0,
+    type varchar,
+    interest int DEFAULT 0,
+    primary key (acct_num),
+    check ((type = 'checking') or (type = 'savings' and balance >= 0)),
+    check ((interest = 0 and type = 'checking') or (interest >= 0 and type = 'savings'))
 );
 
+create sequence account_num_seq;
+alter table Account alter column acct_num type numeric(12);
+alter table Account alter column acct_num set DEFAULT nextval('account_num_seq');
+alter SEQUENCE account_num_seq owned by Account.acct_num;
 create table Owners
 (
     acct_num numeric(12),
-    first_name varchar,
-    last_name varchar,
-    foreign key (first_name, last_name) references Customer on delete cascade,
+    username varchar(20),
+    foreign key (username) references Customer on delete cascade,
     foreign key (acct_num) references Account on delete cascade
 );
 
-create table Transaction
+create table Transactions
 (
-    id int not null,
+    id serial,
     acct_num numeric(12),
     type VARCHAR,
     amount NUMERIC(10,2),
     description text,
+    date date DEFAULT CURRENT_DATE,
+    balance_after numeric(10,2) default 0,
     primary key (id),
     foreign key (acct_num) references Account on delete cascade,
-    check (type='withdrawal' or type='deposit' or type='transfer' or type='external transfer')
+    check ((type='withdrawal' or type='deposit' or type='transfer' or type='external transfer'))
 );
-
-create or replace function add_user()
-	returns trigger as
-$$
-begin 
-	execute format('create user %I with password ''%I''', new.username, new.pass);
-	return new;
-end;
-$$
-language 'plpgsql';
-
-create or replace trigger new_customer_trigger
-	after insert
-	on Customer
-	for each row 
-	execute procedure add_user();
-
-create or replace function remove_user()
-    returns trigger as
-$$
-begin
-    execute format('drop user if exists %I', old.username);
-    return new;
-end;
-$$
-language 'plpgsql';
-
-create or replace trigger delete_customer_trigger
-    after delete
-    on Customer
-    for each row
-    execute procedure remove_user();
